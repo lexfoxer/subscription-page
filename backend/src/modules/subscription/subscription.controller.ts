@@ -10,6 +10,7 @@ import { IsBrowser } from '@common/decorators/is-browser';
 
 import { WebpageService } from '@modules/webpage/webpage.service';
 
+import { ACCOUNT_SETTINGS_PATH_SEGMENT } from './subscription.constants';
 import { SubscriptionService } from './subscription.service';
 
 @Controller()
@@ -38,6 +39,12 @@ export class SubscriptionController {
                 response,
                 resolvedShortUuid ?? shortUuid,
             );
+        }
+
+        if (clientType === ACCOUNT_SETTINGS_PATH_SEGMENT) {
+            // Settings page only exists in the browser; never serve it as a subscription.
+            response.socket?.destroy();
+            return;
         }
 
         return this.subscriptionService.serveSubscriptionPage(

@@ -29,6 +29,15 @@ export function RootLayout() {
 
         if (subPageDiv) {
             const subscriptionUrl = subPageDiv.dataset.panel
+            const featuresData = subPageDiv.dataset.features
+
+            if (featuresData) {
+                try {
+                    subscriptionActions.setAccountFeatures(JSON.parse(atob(featuresData)))
+                } catch (error) {
+                    consola.log(error)
+                }
+            }
 
             if (subscriptionUrl) {
                 try {

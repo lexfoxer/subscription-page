@@ -1,5 +1,7 @@
 services:
   remnawave-subscription-page:
+    # Upstream image. For a fork built by .github/workflows/ghcr-fork.yml use
+    # ghcr.io/<your-github-user>/subscription-page:latest instead.
     image: remnawave/subscription-page:latest
     container_name: remnawave-subscription-page
     hostname: remnawave-subscription-page
@@ -8,6 +10,9 @@ services:
       - .env
     ports:
       - '127.0.0.1:3010:3010'
+    volumes:
+      # Traffic reset history (DATA_DIR). Safe to omit when TRAFFIC_RESET_LIMIT_PER_MONTH=0.
+      - ./data:/opt/app/data
     networks:
       - remnawave-network
 

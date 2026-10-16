@@ -1,7 +1,7 @@
 process.title = 'rw-subpage';
 
 import cookieParser from 'cookie-parser';
-import { Request, Response, NextFunction } from 'express';
+import { json, NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from 'nest-winston';
@@ -27,6 +27,8 @@ import {
 import { customLogFilter } from '@common/utils/filter-logs/filter-logs';
 import { getAssetsPath, isDevelopment, isDevOrDebugLogsEnabled } from '@common/utils/startup-app';
 import { getStartMessage } from '@common/utils/startup-app/get-start-message';
+
+import { getAccountFeatures } from '@modules/account/account-features';
 
 import { AppModule } from './app.module';
 
@@ -90,8 +92,13 @@ async function bootstrap(): Promise<void> {
         app.use(proxyCheckMiddleware);
     }
 
-    app.use('/assets', cookieParser());
+    // Session cookie is needed by /assets (static protection) and the account API (SessionGuard).
+    app.use(cookieParser());
     app.use('/assets', checkAssetsCookieMiddleware);
+
+    // Must run before headerFilterMiddleware: it strips `content-length`, after which the
+    // body parser Nest registers later would treat every request as body-less.
+    app.use(json({ limit: '16kb' }));
 
     app.use(noRobotsMiddleware, getRealIp, headerFilterMiddleware);
 
@@ -133,6 +140,18 @@ async function bootstrap(): Promise<void> {
         methods: 'GET',
         credentials: false,
     });
+
+    const accountFeatures = getAccountFeatures(config);
+
+    logger.info(
+        `[CONFIG] Account settings page: ${accountFeatures.enabled ? 'enabled' : 'disabled'}` +
+            ` (external squads: ${accountFeatures.externalSquads ? 'on' : 'off'},` +
+            ` traffic reset: ${
+                accountFeatures.trafficReset
+                    ? `${config.getOrThrow('TRAFFIC_RESET_LIMIT_PER_MONTH')}/month`
+                    : 'off'
+            })`,
+    );
 
     app.enableShutdownHooks();
 

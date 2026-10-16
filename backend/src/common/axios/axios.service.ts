@@ -7,14 +7,18 @@ import { table } from 'table';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import {
+    GetExternalSquadsCommand,
     GetMetadataCommand,
     GetSubpageConfigByShortUuidCommand,
     GetSubscriptionInfoByShortUuidCommand,
     GetSubpageConfigCommand,
     GetSubpageConfigsCommand,
+    GetUserByShortUuidCommand,
     GetUserByUsernameCommand,
     REMNAWAVE_REAL_IP_HEADER,
+    ResetUserTrafficCommand,
     TRequestTemplateTypeKeys,
+    UpdateUserCommand,
 } from '@remnawave/backend-contract';
 
 import { TypedConfigService } from '@common/config/app-config';
@@ -167,6 +171,120 @@ export class AxiosService implements OnModuleInit {
                 };
             }
         }
+    }
+
+    public async getUserByShortUuid(
+        clientIp: string,
+        shortUuid: string,
+    ): Promise<ICommandResponse<GetUserByShortUuidCommand.Response['response']>> {
+        try {
+            const response = await this.axiosInstance.request<GetUserByShortUuidCommand.Response>({
+                method: GetUserByShortUuidCommand.endpointDetails.REQUEST_METHOD,
+                url: GetUserByShortUuidCommand.url(encodeURIComponent(shortUuid)),
+                headers: {
+                    [REMNAWAVE_REAL_IP_HEADER]: clientIp,
+                },
+            });
+
+            return {
+                isOk: true,
+                response: response.data.response,
+            };
+        } catch (error) {
+            return this.handleCommandError('GetUserByShortUuid', error);
+        }
+    }
+
+    public async updateUserExternalSquad(
+        clientIp: string,
+        userId: number,
+        externalSquadUuid: string | null,
+    ): Promise<ICommandResponse<UpdateUserCommand.Response['response']>> {
+        try {
+            const body: UpdateUserCommand.RequestBody = {
+                id: userId,
+                externalSquadUuid,
+            };
+
+            const response = await this.axiosInstance.request<UpdateUserCommand.Response>({
+                method: UpdateUserCommand.endpointDetails.REQUEST_METHOD,
+                url: UpdateUserCommand.url,
+                data: body,
+                headers: {
+                    [REMNAWAVE_REAL_IP_HEADER]: clientIp,
+                },
+            });
+
+            return {
+                isOk: true,
+                response: response.data.response,
+            };
+        } catch (error) {
+            return this.handleCommandError('UpdateUserExternalSquad', error);
+        }
+    }
+
+    public async resetUserTraffic(
+        clientIp: string,
+        userId: number,
+    ): Promise<ICommandResponse<ResetUserTrafficCommand.Response['response']>> {
+        try {
+            const response = await this.axiosInstance.request<ResetUserTrafficCommand.Response>({
+                method: ResetUserTrafficCommand.endpointDetails.REQUEST_METHOD,
+                url: ResetUserTrafficCommand.url(String(userId)),
+                headers: {
+                    [REMNAWAVE_REAL_IP_HEADER]: clientIp,
+                },
+            });
+
+            return {
+                isOk: true,
+                response: response.data.response,
+            };
+        } catch (error) {
+            return this.handleCommandError('ResetUserTraffic', error);
+        }
+    }
+
+    public async getExternalSquads(): Promise<
+        ICommandResponse<GetExternalSquadsCommand.Response['response']>
+    > {
+        try {
+            const response = await this.axiosInstance.request<GetExternalSquadsCommand.Response>({
+                method: GetExternalSquadsCommand.endpointDetails.REQUEST_METHOD,
+                url: GetExternalSquadsCommand.url,
+            });
+
+            return {
+                isOk: true,
+                response: response.data.response,
+            };
+        } catch (error) {
+            return this.handleCommandError('GetExternalSquads', error);
+        }
+    }
+
+    private handleCommandError(commandName: string, error: unknown): ICommandResponse<never> {
+        if (error instanceof AxiosError) {
+            const status = error.response?.status;
+            const body = error.response?.data as { message?: string } | undefined;
+
+            this.logger.error(
+                `Error in ${commandName} Request: ${error.message}${
+                    body?.message ? ` (${body.message})` : ''
+                }`,
+            );
+
+            return {
+                isOk: false,
+                code: status ? String(status) : undefined,
+                message: body?.message ?? error.message,
+            };
+        }
+
+        this.logger.error(`Error in ${commandName} Request:`, error);
+
+        return { isOk: false };
     }
 
     public async getSubscriptionPageConfigByUuid(

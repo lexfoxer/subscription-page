@@ -20,12 +20,15 @@ import { TypedConfigService } from '@common/config/app-config';
 import { getAssetsPath, isDevelopment } from '@common/utils';
 import { decryptUuid, encryptUuid } from '@common/utils/crypt-utils';
 
+import { getAccountFeatures, IAccountFeatures } from '@modules/account/account-features';
+
 @Injectable()
 export class WebpageService implements OnApplicationBootstrap {
     private readonly logger = new Logger(WebpageService.name);
     private readonly internalJwtSecret: string;
     private readonly subpageConfigUuid: string;
     private readonly subpageConfigMap: Map<string, TSubscriptionPageRawConfig> = new Map();
+    private readonly accountFeatures: IAccountFeatures;
     private indexTemplate: ejs.TemplateFunction;
 
     constructor(
@@ -35,6 +38,7 @@ export class WebpageService implements OnApplicationBootstrap {
     ) {
         this.internalJwtSecret = this.configService.getOrThrow('INTERNAL_JWT_SECRET');
         this.subpageConfigUuid = this.configService.getOrThrow('SUBPAGE_CONFIG_UUID');
+        this.accountFeatures = getAccountFeatures(this.configService);
     }
 
     public async onApplicationBootstrap(): Promise<void> {
@@ -166,11 +170,12 @@ export class WebpageService implements OnApplicationBootstrap {
         return finalSubpageConfigUuid;
     }
 
-    private generateJwtForCookie(uuid: string | null): string {
+    private generateJwtForCookie(uuid: string | null, shortUuid: string): string {
         return this.jwtService.sign(
             {
                 sessionId: nanoid(32),
                 su: this.getEncryptedSubpageConfigUuid(uuid),
+                uid: encryptUuid(shortUuid, this.internalJwtSecret),
             },
             {
                 expiresIn: '33m',
@@ -222,17 +227,25 @@ export class WebpageService implements OnApplicationBootstrap {
                 subscriptionData.response.ssConfLinks = {};
             }
 
-            res.cookie('session', this.generateJwtForCookie(subpageConfig.subpageConfigUuid), {
-                httpOnly: true,
-                secure: !isDevelopment(),
-                maxAge: 1_800_000, // 30 minutes
-            });
+            res.cookie(
+                'session',
+                this.generateJwtForCookie(subpageConfig.subpageConfigUuid, shortUuid),
+                {
+                    httpOnly: true,
+                    secure: !isDevelopment(),
+                    sameSite: 'lax',
+                    maxAge: 1_800_000, // 30 minutes
+                },
+            );
 
             res.type('html').send(
                 this.indexTemplate({
                     metaTitle: baseSettings.metaTitle,
                     metaDescription: baseSettings.metaDescription,
                     panelData: Buffer.from(JSON.stringify(subscriptionData)).toString('base64'),
+                    featuresData: Buffer.from(JSON.stringify(this.accountFeatures)).toString(
+                        'base64',
+                    ),
                 }),
             );
         } catch (error) {

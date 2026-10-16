@@ -1,0 +1,94 @@
+.option {
+    display: flex;
+    align-items: center;
+    gap: var(--mantine-spacing-sm);
+    width: 100%;
+    padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+    text-align: start;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-inline-start: 3px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--mantine-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-inline-start-color: rgba(255, 255, 255, 0.25);
+}
+
+.optionSelected,
+.optionSelected:hover {
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.12) 0%, rgba(34, 211, 238, 0.04) 100%);
+    border-color: rgba(34, 211, 238, 0.2);
+    border-inline-start-color: var(--mantine-color-cyan-5);
+    box-shadow:
+        inset 4px 0 12px -4px rgba(34, 211, 238, 0.3),
+        0 0 12px rgba(34, 211, 238, 0.1);
+}
+
+.optionDisabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.optionRadio {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease;
+}
+
+.optionSelected .optionRadio {
+    border-color: var(--mantine-color-cyan-4);
+}
+
+.optionRadio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mantine-color-cyan-4);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+}
+
+.optionSelected .optionRadio::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.optionBody {
+    min-width: 0;
+    flex: 1;
+}
+
+.statBox {
+    padding: var(--mantine-spacing-sm);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--mantine-radius-md);
+}
+
+.modalContent {
+    background: rgba(22, 27, 35, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalHeader {
+    background: transparent;
+}
+
+.modalTitle {
+    font-weight: 600;
+    color: white;
+}

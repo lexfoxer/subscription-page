@@ -23,6 +23,93 @@ const isTrustProxy = (val: string): boolean => {
     }
 };
 
+const SELECTABLE_PLATFORMS = [
+    'ios',
+    'android',
+    'linux',
+    'macos',
+    'windows',
+    'androidTV',
+    'appleTV',
+] as const;
+
+export const selectableExternalSquadSchema = z.object({
+    uuid: z.uuid(),
+    label: z.string().min(1).max(64).optional(),
+    platforms: z.array(z.enum(SELECTABLE_PLATFORMS)).default([]),
+});
+
+export type TSelectableExternalSquad = z.infer<typeof selectableExternalSquadSchema>;
+
+/**
+ * - disabled: feature off
+ * - auto:     every Remnawave external squad whose name starts with "[tags]" is selectable
+ * - list:     only the squads enumerated in the env JSON array
+ */
+export type TExternalSquadsConfig =
+    | { mode: 'auto' }
+    | { mode: 'disabled' }
+    | { mode: 'list'; squads: TSelectableExternalSquad[] };
+
+const selectableExternalSquadsList = () =>
+    z
+        .string()
+        .optional()
+        .transform((val, ctx): TExternalSquadsConfig => {
+            const raw = val?.trim();
+
+            if (!raw) return { mode: 'disabled' };
+
+            if (raw.toLowerCase() === 'auto') return { mode: 'auto' };
+
+            let parsed: unknown;
+
+            try {
+                parsed = JSON.parse(raw);
+            } catch {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message:
+                        'Must be "auto" or a JSON array, e.g. [{"uuid":"<external squad uuid>","platforms":["ios","macos"],"label":"Fast servers"}]',
+                });
+                return z.NEVER;
+            }
+
+            const result = z.array(selectableExternalSquadSchema).min(1).safeParse(parsed);
+
+            if (!result.success) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: result.error.issues
+                        .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`)
+                        .join('; '),
+                });
+                return z.NEVER;
+            }
+
+            const seen = new Set<string>();
+            for (const squad of result.data) {
+                if (seen.has(squad.uuid)) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: `Duplicate external squad uuid: ${squad.uuid}`,
+                    });
+                    return z.NEVER;
+                }
+                seen.add(squad.uuid);
+            }
+
+            return { mode: 'list', squads: result.data };
+        });
+
+const nonNegativeIntString = (def: string) =>
+    z
+        .string()
+        .default(def)
+        .transform((val) => (val.trim() === '' ? def : val.trim()))
+        .refine((val) => /^\d+$/.test(val), 'Must be a non-negative integer.')
+        .transform((val) => Number(val));
+
 const REQUIRED_REMNAWAVE_API_TOKEN_MESSAGE =
     'Remnawave Dashboard → Remnawave Settings → API Tokens. Create a new API Token and set it in the .env file.';
 
@@ -67,6 +154,14 @@ export const configSchema = z
         MARZBAN_LEGACY_DROP_REVOKED_SUBSCRIPTIONS: booleanString(),
         INTERNAL_JWT_SECRET: z.string(),
         EGAMES_COOKIE: z.optional(z.string()),
+
+        DATA_DIR: z
+            .string()
+            .default('data')
+            .transform((val) => (val.trim() === '' ? 'data' : val.trim())),
+        TRAFFIC_RESET_LIMIT_PER_MONTH: nonNegativeIntString('0'),
+        EXTERNAL_SQUADS_SELECTABLE: selectableExternalSquadsList(),
+        EXTERNAL_SQUADS_ALLOW_DEFAULT: booleanString(),
     })
     .superRefine((data, ctx) => {
         if (

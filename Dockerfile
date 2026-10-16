@@ -32,6 +32,10 @@ COPY frontend/dist/ ./frontend/
 COPY backend/ecosystem.config.js ./
 COPY backend/docker-entrypoint.sh ./
 
+# Default DATA_DIR (SQLite with the self-service traffic reset history)
+RUN mkdir -p /opt/app/data
+VOLUME ["/opt/app/data"]
+
 ENV PM2_DISABLE_VERSION_CHECK=true
 ENV NODE_OPTIONS="--max-old-space-size=16384"
 

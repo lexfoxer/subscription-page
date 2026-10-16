@@ -1,29 +1,12 @@
-import { TSubscriptionPagePlatformKey } from '@remnawave/subscription-page-types'
 import { useMediaQuery, useOs } from '@mantine/hooks'
 import { useEffect, useState } from 'react'
 
 import { useSubscriptionInfoStoreInfo } from '@entities/subscription-info-store'
 import { useAppConfig, useIsConfigLoaded } from '@entities/app-config-store'
+import { osToPlatform } from '@shared/utils/platform'
 import { LoadingScreen } from '@shared/ui'
 
 import { MainPageComponent } from '../components/main.page.component'
-
-function osToPlatform(os: string): TSubscriptionPagePlatformKey | undefined {
-    switch (os) {
-        case 'android':
-            return 'android'
-        case 'ios':
-            return 'ios'
-        case 'linux':
-            return 'linux'
-        case 'macos':
-            return 'macos'
-        case 'windows':
-            return 'windows'
-        default:
-            return undefined
-    }
-}
 
 export const MainPageConnector = () => {
     const { subscription } = useSubscriptionInfoStoreInfo()

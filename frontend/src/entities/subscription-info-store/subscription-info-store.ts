@@ -1,19 +1,44 @@
 import { GetSubscriptionInfoByShortUuidCommand } from '@remnawave/backend-contract'
 import { create } from 'zustand'
 
-import { IActions, IState } from './interfaces'
+import { IAccountFeatures, IActions, IState } from './interfaces'
+
+const DISABLED_FEATURES: IAccountFeatures = {
+    enabled: false,
+    externalSquads: false,
+    trafficReset: false
+}
 
 const initialState: IState = {
-    subscription: null
+    subscription: null,
+    accountFeatures: DISABLED_FEATURES
 }
 
 export const useSubscriptionInfoStore = create<IActions & IState>()((set) => ({
     ...initialState,
     actions: {
-        setSubscriptionInfo: (info: IState) => {
+        setSubscriptionInfo: (info) => {
             set((state) => ({
                 ...state,
                 subscription: info.subscription
+            }))
+        },
+        updateSubscription: (subscription) => {
+            set((state) => ({
+                ...state,
+                subscription
+            }))
+        },
+        setAccountFeatures: (features) => {
+            set((state) => ({
+                ...state,
+                accountFeatures: {
+                    externalSquads: Boolean(features.externalSquads),
+                    trafficReset: Boolean(features.trafficReset),
+                    enabled:
+                        Boolean(features.enabled) &&
+                        (Boolean(features.externalSquads) || Boolean(features.trafficReset))
+                }
             }))
         },
         getInitialState: () => {
@@ -29,6 +54,8 @@ export const useSubscriptionInfoStoreActions = () =>
     useSubscriptionInfoStore((store) => store.actions)
 
 export const useSubscriptionInfoStoreInfo = () => useSubscriptionInfoStore((state) => state)
+
+export const useAccountFeatures = () => useSubscriptionInfoStore((state) => state.accountFeatures)
 
 export const useSubscription = (): GetSubscriptionInfoByShortUuidCommand.Response['response'] => {
     const subscription = useSubscriptionInfoStore((state) => state.subscription)

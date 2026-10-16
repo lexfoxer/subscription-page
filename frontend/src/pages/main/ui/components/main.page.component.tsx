@@ -15,6 +15,7 @@ import {
 } from '@widgets/main'
 import { useAppConfig, useAppConfigStoreActions, useCurrentLang } from '@entities/app-config-store'
 import { LanguagePicker } from '@shared/ui/language-picker/language-picker.shared'
+import { SettingsButton } from '@widgets/settings'
 import { Page, RemnawaveLogo } from '@shared/ui'
 
 interface IMainPageComponentProps {
@@ -95,10 +96,13 @@ export const MainPageComponent = ({ isMobile, platform }: IMainPageComponentProp
                             </Title>
                         </Group>
 
-                        <SubscriptionLinkWidget
-                            hideGetLink={config.baseSettings.hideGetLinkButton}
-                            supportUrl={config.brandingSettings.supportUrl}
-                        />
+                        <Group gap="xs" ml="auto" wrap="nowrap">
+                            <SettingsButton />
+                            <SubscriptionLinkWidget
+                                hideGetLink={config.baseSettings.hideGetLinkButton}
+                                supportUrl={config.brandingSettings.supportUrl}
+                            />
+                        </Group>
                     </Group>
                 </Container>
             </Box>
