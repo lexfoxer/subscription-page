@@ -37,6 +37,8 @@ export interface IAccountSettings {
     }
 }
 
+export type IAccountTrafficReset = Pick<IAccountSettings, 'trafficReset' | 'user'>
+
 export interface IAccountMutationResult {
     settings: IAccountSettings
     subscription: GetSubscriptionInfoByShortUuidCommand.Response['response'] | null

@@ -11,7 +11,8 @@ import {
     SubscriptionInfoCollapsedWidget,
     SubscriptionInfoExpandedWidget,
     SubscriptionLinkWidget,
-    TimelineBlockRenderer
+    TimelineBlockRenderer,
+    TrafficResetConnector
 } from '@widgets/main'
 import { useAppConfig, useAppConfigStoreActions, useCurrentLang } from '@entities/app-config-store'
 import { LanguagePicker } from '@shared/ui/language-picker/language-picker.shared'
@@ -117,6 +118,8 @@ export const MainPageComponent = ({ isMobile, platform }: IMainPageComponentProp
                     {SubscriptionInfoBlockRenderer && (
                         <SubscriptionInfoBlockRenderer isMobile={isMobile} />
                     )}
+
+                    <TrafficResetConnector />
 
                     {atLeastOnePlatformApp && (
                         <InstallationGuideConnector

@@ -23,6 +23,11 @@ export class AccountController {
         return this.accountService.getSettings(clientIp, session.shortUuid);
     }
 
+    @Get('traffic-reset')
+    async getTrafficReset(@ClientIp() clientIp: string, @SessionUser() session: ISessionUser) {
+        return this.accountService.getTrafficReset(clientIp, session.shortUuid);
+    }
+
     @Post('external-squad')
     @HttpCode(200)
     async setExternalSquad(

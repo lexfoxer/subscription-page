@@ -57,6 +57,19 @@ export class AccountService {
         return this.buildSettings(user);
     }
 
+    /** Lightweight view for the main page: no external squads lookup. */
+    public async getTrafficReset(
+        clientIp: string,
+        shortUuid: string,
+    ): Promise<Pick<IAccountSettings, 'trafficReset' | 'user'>> {
+        const user = await this.fetchUser(clientIp, shortUuid);
+
+        return {
+            user: this.buildUserSection(user),
+            trafficReset: this.buildTrafficResetSection(user),
+        };
+    }
+
     public async setExternalSquad(
         clientIp: string,
         shortUuid: string,
@@ -178,22 +191,23 @@ export class AccountService {
     }
 
     private async buildSettings(user: TRemnawaveUser): Promise<IAccountSettings> {
-        const externalSquads = await this.buildExternalSquadsSection(user);
-        const trafficReset = this.buildTrafficResetSection(user);
-
         return {
-            user: {
-                username: user.username,
-                status: user.status,
-                trafficUsedBytes: user.userTraffic.usedTrafficBytes,
-                trafficLimitBytes: user.trafficLimitBytes,
-                trafficLimitStrategy: user.trafficLimitStrategy,
-                lastTrafficResetAt: user.lastTrafficResetAt
-                    ? new Date(user.lastTrafficResetAt).toISOString()
-                    : null,
-            },
-            externalSquads,
-            trafficReset,
+            user: this.buildUserSection(user),
+            externalSquads: await this.buildExternalSquadsSection(user),
+            trafficReset: this.buildTrafficResetSection(user),
+        };
+    }
+
+    private buildUserSection(user: TRemnawaveUser): IAccountSettings['user'] {
+        return {
+            username: user.username,
+            status: user.status,
+            trafficUsedBytes: user.userTraffic.usedTrafficBytes,
+            trafficLimitBytes: user.trafficLimitBytes,
+            trafficLimitStrategy: user.trafficLimitStrategy,
+            lastTrafficResetAt: user.lastTrafficResetAt
+                ? new Date(user.lastTrafficResetAt).toISOString()
+                : null,
         };
     }
 

@@ -1,7 +1,12 @@
 import { FetchError, ofetch } from 'ofetch'
 import { joinURL } from 'ufo'
 
-import { IAccountMutationResult, IAccountSettings, TAccountErrorCode } from './account.types'
+import {
+    IAccountMutationResult,
+    IAccountSettings,
+    IAccountTrafficReset,
+    TAccountErrorCode
+} from './account.types'
 
 export class AccountApiError extends Error {
     constructor(
@@ -57,6 +62,16 @@ export function createAccountApi(accountApiPath: string) {
         async getSettings(): Promise<IAccountSettings> {
             try {
                 return await client<IAccountSettings>(joinURL('/', 'settings'), {
+                    query: { v: Date.now() }
+                })
+            } catch (error) {
+                throw toAccountApiError(error)
+            }
+        },
+
+        async getTrafficReset(): Promise<IAccountTrafficReset> {
+            try {
+                return await client<IAccountTrafficReset>(joinURL('/', 'traffic-reset'), {
                     query: { v: Date.now() }
                 })
             } catch (error) {
