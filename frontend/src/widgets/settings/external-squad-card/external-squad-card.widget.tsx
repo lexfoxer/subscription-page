@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { TSubscriptionPagePlatformKey } from '@remnawave/subscription-page-types'
 import { IconDeviceMobile, IconServer2 } from '@tabler/icons-react'
 import clsx from 'clsx'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import { AccountApiError, IAccountSettings, IExternalSquadOption } from '@shared/api/account'
 import { useAccountTranslation } from '@shared/locales/account-settings'
@@ -86,34 +86,13 @@ export const ExternalSquadCardWidget = ({ externalSquads, platform, onSave }: IP
 
     const [selectedValue, setSelectedValue] = useState<string>(currentValue)
     const [isSaving, setIsSaving] = useState(false)
-    const [showAll, setShowAll] = useState(false)
 
     const isRecommended = (option: IExternalSquadOption) =>
-        option.platforms.length === 0 ||
-        (platform !== undefined && option.platforms.includes(platform))
-
-    const { recommended, others } = useMemo(() => {
-        const recommended: IExternalSquadOption[] = []
-        const others: IExternalSquadOption[] = []
-
-        for (const option of externalSquads.options) {
-            if (isRecommended(option)) {
-                recommended.push(option)
-            } else {
-                others.push(option)
-            }
-        }
-
-        return { recommended, others }
-    }, [externalSquads.options, platform])
+        option.platforms.length > 0 && platform !== undefined && option.platforms.includes(platform)
 
     const currentIsCustom =
         externalSquads.current !== null &&
         !externalSquads.options.some((option) => option.uuid === externalSquads.current?.uuid)
-
-    const mustShowAll = showAll || recommended.length === 0
-    const visibleOptions = mustShowAll ? externalSquads.options : recommended
-    const hasHiddenOptions = others.length > 0 && recommended.length > 0
 
     const isDirty = selectedValue !== currentValue
 
@@ -197,28 +176,17 @@ export const ExternalSquadCardWidget = ({ externalSquads, platform, onSave }: IP
                             />
                         )}
 
-                        {visibleOptions.map((option) => (
+                        {externalSquads.options.map((option) => (
                             <OptionRow
                                 disabled={isSaving}
                                 key={option.uuid}
                                 name={option.name}
                                 onSelect={() => select(option.uuid)}
                                 platforms={option.platforms}
-                                recommended={option.platforms.length > 0 && isRecommended(option)}
+                                recommended={isRecommended(option)}
                                 selected={selectedValue === option.uuid}
                             />
                         ))}
-
-                        {hasHiddenOptions && (
-                            <Button
-                                color="gray"
-                                onClick={() => setShowAll((value) => !value)}
-                                size="compact-sm"
-                                variant="subtle"
-                            >
-                                {showAll ? ta('squadShowRecommended') : ta('squadShowAll')}
-                            </Button>
-                        )}
                     </Stack>
                 )}
 
