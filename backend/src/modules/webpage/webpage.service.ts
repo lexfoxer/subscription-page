@@ -29,6 +29,7 @@ export class WebpageService implements OnApplicationBootstrap {
     private readonly subpageConfigUuid: string;
     private readonly subpageConfigMap: Map<string, TSubscriptionPageRawConfig> = new Map();
     private readonly accountFeatures: IAccountFeatures;
+    private readonly unknownLinkResponse: '404' | 'drop';
     private indexTemplate: ejs.TemplateFunction;
 
     constructor(
@@ -39,6 +40,7 @@ export class WebpageService implements OnApplicationBootstrap {
         this.internalJwtSecret = this.configService.getOrThrow('INTERNAL_JWT_SECRET');
         this.subpageConfigUuid = this.configService.getOrThrow('SUBPAGE_CONFIG_UUID');
         this.accountFeatures = getAccountFeatures(this.configService);
+        this.unknownLinkResponse = this.configService.getOrThrow('UNKNOWN_LINK_RESPONSE');
     }
 
     public async onApplicationBootstrap(): Promise<void> {
@@ -183,6 +185,20 @@ export class WebpageService implements OnApplicationBootstrap {
         );
     }
 
+    /**
+     * Unknown shortUuid. Upstream silently drops the connection (UNKNOWN_LINK_RESPONSE=drop),
+     * which browsers show as "connection reset" and some proxies count as a backend failure.
+     * The default answers a plain 404 instead.
+     */
+    private rejectUnknownLink(res: Response): void {
+        if (this.unknownLinkResponse === 'drop') {
+            res.socket?.destroy();
+            return;
+        }
+
+        res.status(404).set('Cache-Control', 'no-store').type('text/plain').send('Not found');
+    }
+
     public async serveWebpage(
         clientIp: string,
         req: Request,
@@ -196,6 +212,11 @@ export class WebpageService implements OnApplicationBootstrap {
             );
 
             if (!subscriptionDataResponse.isOk || !subscriptionDataResponse.response) {
+                if (subscriptionDataResponse.code === '404') {
+                    this.rejectUnknownLink(res);
+                    return;
+                }
+
                 res.socket?.destroy();
                 return;
             }

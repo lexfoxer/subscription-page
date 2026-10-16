@@ -362,13 +362,13 @@ export class AxiosService implements OnModuleInit {
                 response: response.data,
             };
         } catch (error) {
-            if (error instanceof AxiosError) {
-                this.logger.error('Error in GetSubscriptionInfo Request:', error.message);
-            } else {
-                this.logger.error('Error in GetSubscriptionInfo Request:', error);
+            if (error instanceof AxiosError && error.response?.status === 404) {
+                this.logger.debug(`GetSubscriptionInfo: subscription not found (${shortUuid})`);
+
+                return { isOk: false, code: '404' };
             }
 
-            return { isOk: false };
+            return this.handleCommandError('GetSubscriptionInfo', error);
         }
     }
 
