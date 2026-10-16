@@ -152,6 +152,7 @@ EXTERNAL_SQUADS_ALLOW_DEFAULT=false
 | --- | --- |
 | `pub-ios-macos-appletv Apple servers` | «Apple servers», рекомендуется на iPhone, Mac, Apple TV |
 | `pub-android-windows-linux Fast` | «Fast», рекомендуется на Android, Windows, Linux |
+| `pub-linux-default` | «default», рекомендуется на Linux (без пробела тоже можно) |
 | `pub-all Все серверы` или `pub Все серверы` | «Все серверы», подходит любому устройству |
 | `Internal` | не показывается, нет маркера `pub` |
 

@@ -8,6 +8,7 @@ import { TSelectablePlatformKey } from './schemas/account.schemas';
  * tags joined with dashes/underscores. Tags are platform keys (or aliases) or `all`:
  *
  *   "pub-ios-macos Apple servers"  -> selectable, recommended on iOS / macOS
+ *   "pub-linux-default"            -> selectable, recommended on Linux, shown as "default"
  *   "pub-all Every server"         -> selectable, suits any device
  *   "pub Every server"             -> same as pub-all
  *   "Internal squad"               -> not selectable (no marker)
@@ -47,35 +48,42 @@ export interface IParsedExternalSquadName {
     unknownTags: string[];
 }
 
-function extractTags(name: string): { rawTags: string; rest: string } | null {
+export function parseExternalSquadName(name: string): IParsedExternalSquadName {
     const bracket = BRACKET_NAME_REGEX.exec(name);
 
     if (bracket) {
-        return { rawTags: bracket[1], rest: bracket[2] };
+        return buildResult(name, bracket[1].split(/[,;|_\s-]+/), bracket[2]);
     }
 
     const pub = PUB_NAME_REGEX.exec(name);
 
-    if (pub) {
-        return { rawTags: pub[1] ?? '', rest: pub[2] ?? '' };
-    }
-
-    return null;
-}
-
-export function parseExternalSquadName(name: string): IParsedExternalSquadName {
-    const extracted = extractTags(name);
-
-    if (!extracted) {
+    if (!pub) {
         return { selectable: false, displayName: name.trim(), platforms: [], unknownTags: [] };
     }
 
-    const tags = extracted.rawTags
-        .split(/[,;|_\s-]+/)
-        .map((tag) => tag.trim().toLowerCase())
-        .filter(Boolean);
+    // "pub-linux-default" has no space: platform tags are read from the left while they are
+    // recognised, everything after them ("default") is the display name.
+    const tokens = (pub[1] ?? '').split(/[_-]+/).filter(Boolean);
+    const tags: string[] = [];
 
-    const displayName = extracted.rest.trim() || name.trim();
+    while (tokens.length > 0) {
+        const tag = tokens[0].toLowerCase();
+
+        if (PLATFORM_ALIASES[tag] || ANY_PLATFORM_TAGS.has(tag) || HIDDEN_TAGS.has(tag)) {
+            tags.push(tokens.shift()!);
+        } else {
+            break;
+        }
+    }
+
+    const rest = [tokens.join('-'), pub[2] ?? ''].filter(Boolean).join(' ');
+
+    return buildResult(name, tags, rest);
+}
+
+function buildResult(name: string, rawTags: string[], rest: string): IParsedExternalSquadName {
+    const tags = rawTags.map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+    const displayName = rest.trim() || name.trim();
 
     if (tags.some((tag) => HIDDEN_TAGS.has(tag))) {
         return { selectable: false, displayName, platforms: [], unknownTags: [] };
