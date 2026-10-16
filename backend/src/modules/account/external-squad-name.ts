@@ -3,15 +3,17 @@ import { TSelectablePlatformKey } from './schemas/account.schemas';
 /**
  * Naming convention for `EXTERNAL_SQUADS_SELECTABLE=auto`.
  *
- * A squad is offered to users only when its name in Remnawave starts with a tag list in
- * square brackets. Tags are platform keys (or their aliases) or `all`:
+ * Remnawave only allows letters, digits, underscores, dashes and spaces in squad names,
+ * so the marker is a first word that starts with `pub`, optionally followed by platform
+ * tags joined with dashes/underscores. Tags are platform keys (or aliases) or `all`:
  *
- *   "[ios,macos] Apple servers"  -> selectable, recommended on iOS / macOS
- *   "[all] Every server"         -> selectable, suits any device
- *   "[hidden] Experiments"       -> not selectable
- *   "Internal squad"             -> not selectable (no tags)
+ *   "pub-ios-macos Apple servers"  -> selectable, recommended on iOS / macOS
+ *   "pub-all Every server"         -> selectable, suits any device
+ *   "pub Every server"             -> same as pub-all
+ *   "Internal squad"               -> not selectable (no marker)
  *
- * The brackets are stripped from the name shown to users.
+ * The legacy "[ios,macos] Apple servers" form is accepted too. The marker is stripped from
+ * the name shown to users.
  */
 
 const PLATFORM_ALIASES: Record<string, TSelectablePlatformKey> = {
@@ -34,7 +36,8 @@ const PLATFORM_ALIASES: Record<string, TSelectablePlatformKey> = {
 const ANY_PLATFORM_TAGS = new Set(['all', 'any', '*']);
 const HIDDEN_TAGS = new Set(['hidden', 'private', 'internal']);
 
-const TAGGED_NAME_REGEX = /^\s*\[([^\]]*)\]\s*(.*)$/s;
+const BRACKET_NAME_REGEX = /^\s*\[([^\]]*)\]\s*(.*)$/s;
+const PUB_NAME_REGEX = /^\s*pub(?:[-_]([a-z0-9*_-]*))?(?:\s+(.*))?$/is;
 
 export interface IParsedExternalSquadName {
     displayName: string;
@@ -44,19 +47,35 @@ export interface IParsedExternalSquadName {
     unknownTags: string[];
 }
 
-export function parseExternalSquadName(name: string): IParsedExternalSquadName {
-    const match = TAGGED_NAME_REGEX.exec(name);
+function extractTags(name: string): { rawTags: string; rest: string } | null {
+    const bracket = BRACKET_NAME_REGEX.exec(name);
 
-    if (!match) {
+    if (bracket) {
+        return { rawTags: bracket[1], rest: bracket[2] };
+    }
+
+    const pub = PUB_NAME_REGEX.exec(name);
+
+    if (pub) {
+        return { rawTags: pub[1] ?? '', rest: pub[2] ?? '' };
+    }
+
+    return null;
+}
+
+export function parseExternalSquadName(name: string): IParsedExternalSquadName {
+    const extracted = extractTags(name);
+
+    if (!extracted) {
         return { selectable: false, displayName: name.trim(), platforms: [], unknownTags: [] };
     }
 
-    const tags = match[1]
-        .split(/[,;|\s]+/)
+    const tags = extracted.rawTags
+        .split(/[,;|_\s-]+/)
         .map((tag) => tag.trim().toLowerCase())
         .filter(Boolean);
 
-    const displayName = match[2].trim() || name.trim();
+    const displayName = extracted.rest.trim() || name.trim();
 
     if (tags.some((tag) => HIDDEN_TAGS.has(tag))) {
         return { selectable: false, displayName, platforms: [], unknownTags: [] };

@@ -8,8 +8,8 @@ This fork adds an optional settings page at `/<shortUuid>/settings` (a gear icon
 leads to it). It lets the subscriber do two things without contacting support:
 
 - **Pick an external squad**. With `EXTERNAL_SQUADS_SELECTABLE=auto` the list is managed right
-  in the Remnawave dashboard: a squad named `[ios,macos] Apple servers` becomes selectable and is
-  recommended on those platforms, `[all] …` suits any device, squads without a `[tags]` prefix
+  in the Remnawave dashboard: a squad named `pub-ios-macos Apple servers` becomes selectable and is
+  recommended on those platforms, `pub-all …` suits any device, squads without the `pub` marker
   stay hidden. Alternatively the variable takes an explicit JSON list of squads. Remnawave allows
   a single external squad per user, so the choice applies to the whole subscription.
 - **Reset the traffic counter** a limited number of times per calendar month
@@ -24,9 +24,9 @@ the subscription the page was opened with (the session cookie carries the user i
 
 `.github/workflows/ghcr-fork.yml` builds a multi-arch image on every push to `main` or a tag and
 publishes it to `ghcr.io/<owner>/subscription-page` using the built-in `GITHUB_TOKEN`, so no
-secrets are required. The first push creates the package as private: open the package settings on
-GitHub and either make it public or `docker login ghcr.io` on the server with a token that has the
-`read:packages` scope. The upstream workflows (`build-and-push*.yml`) need Docker Hub and Telegram
+secrets are required. The package inherits the repository visibility: public repo, public image,
+no login needed to pull. For a private fork run `docker login ghcr.io` on the server with a token
+that has the `read:packages` scope. The upstream workflows (`build-and-push*.yml`) need Docker Hub and Telegram
 secrets and can be disabled in the fork's Actions tab.
 
 Step-by-step (fork remotes, GHCR, docker-compose, env) in Russian: [docs/FORK_AND_DEPLOY.md](docs/FORK_AND_DEPLOY.md).

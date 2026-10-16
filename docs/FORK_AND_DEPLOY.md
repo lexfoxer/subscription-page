@@ -65,12 +65,9 @@ Workflow `.github/workflows/ghcr-fork.yml` запускается сам при 
 git tag 8.1.0 && git push origin 8.1.0
 ```
 
-После первой сборки пакет появится в **Profile → Packages → subscription-page**. GitHub создаёт
-его приватным. Варианты:
-
-- сделать публичным: **Package settings → Danger Zone → Change visibility → Public**;
-- либо оставить приватным и на сервере один раз выполнить вход с токеном (classic PAT со scope
-  `read:packages`):
+После первой сборки пакет появится в **Profile → Packages → subscription-page**. Он наследует
+видимость репозитория: у публичного форка образ публичный и тянется без логина. Для приватного
+форка на сервере нужен один раз вход с токеном (classic PAT со scope `read:packages`):
 
 ```bash
 echo "<PAT>" | docker login ghcr.io -u <user> --password-stdin
@@ -147,19 +144,19 @@ EXTERNAL_SQUADS_ALLOW_DEFAULT=false
 ### Какие сквады видит пользователь
 
 В режиме `auto` список управляется из панели, через имена сквадов в
-**Dashboard → External Squads**. Сквад попадает на страницу, если его имя начинается с тегов в
-квадратных скобках; сами скобки пользователю не показываются:
+**Dashboard → External Squads**. Панель разрешает в имени только буквы, цифры, дефис,
+подчёркивание и пробел, поэтому маркер — первое слово `pub`, к которому через дефис
+дописываются платформы. Маркер пользователю не показывается:
 
 | Имя сквада в панели | Что увидит пользователь |
 | --- | --- |
-| `[ios,macos,appletv] Apple servers` | «Apple servers», рекомендуется на iPhone, Mac, Apple TV |
-| `[android,windows,linux] Fast` | «Fast», рекомендуется на Android, Windows, Linux |
-| `[all] Все серверы` | «Все серверы», подходит любому устройству |
-| `[hidden] Эксперименты` | не показывается |
-| `Internal` | не показывается, тегов нет |
+| `pub-ios-macos-appletv Apple servers` | «Apple servers», рекомендуется на iPhone, Mac, Apple TV |
+| `pub-android-windows-linux Fast` | «Fast», рекомендуется на Android, Windows, Linux |
+| `pub-all Все серверы` или `pub Все серверы` | «Все серверы», подходит любому устройству |
+| `Internal` | не показывается, нет маркера `pub` |
 
 Теги: `ios`, `android`, `macos` (или `mac`), `windows` (`win`), `linux`, `androidtv` (`atv`),
-`appletv` (`tvos`), `all`. Регистр не важен, разделитель запятая или пробел. Список
+`appletv` (`tvos`), `all`. Регистр не важен, вместо дефиса можно подчёркивание. Список
 обновляется сам, не позднее чем через минуту после переименования.
 
 Если имена сквадов трогать нельзя, вместо `auto` можно задать явный JSON-список в одну строку:
