@@ -32,6 +32,47 @@
 
         <meta name="description" content="<%- metaDescription %>" />
         <title><%- metaTitle %></title>
+        <script>
+            // Startup diagnostics: if the app has not mounted after 6 s, show what went wrong
+            // (JS errors, failed asset loads) instead of a blank page.
+            (function () {
+                var errors = [];
+                window.addEventListener(
+                    'error',
+                    function (e) {
+                        var t = e.target;
+                        if (t && (t.src || t.href) && t !== window) {
+                            errors.push('failed to load ' + String(t.src || t.href).split('/').pop());
+                            return;
+                        }
+                        errors.push(
+                            (e.message || 'error') +
+                                (e.filename ? ' @ ' + e.filename.split('/').pop() + ':' + e.lineno : '')
+                        );
+                    },
+                    true
+                );
+                window.addEventListener('unhandledrejection', function (e) {
+                    var r = e.reason;
+                    errors.push('unhandled: ' + ((r && (r.stack || r.message)) || String(r)));
+                });
+                setTimeout(function () {
+                    var root = document.getElementById('root');
+                    if (!root || root.childElementCount > 0) return;
+                    var box = document.createElement('pre');
+                    box.style.cssText =
+                        'position:fixed;left:8px;right:8px;bottom:8px;max-height:60vh;overflow:auto;' +
+                        'padding:12px;border-radius:8px;background:#2a1215;color:#ffb4b4;' +
+                        'font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-word;z-index:9999';
+                    box.textContent =
+                        'The page failed to start.\n' +
+                        (errors.length ? errors.join('\n') : 'No JS errors captured; check network and cookies.') +
+                        '\n\nUA: ' + navigator.userAgent +
+                        '\ncookies enabled: ' + navigator.cookieEnabled;
+                    document.body.appendChild(box);
+                }, 6000);
+            })();
+        </script>
     </head>
     <body>
         <div id="root"></div>
