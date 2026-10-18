@@ -48,6 +48,23 @@ const en = {
     resetBlockedUnlimited: 'Your subscription has no traffic limit, nothing to reset.',
     resetBlockedInactive: 'Traffic can be reset only for an active subscription.',
 
+    devicesTitle: 'Devices',
+    devicesDescription:
+        'Devices that have connected with this subscription. Unlink the ones you no longer use to free a slot.',
+    devicesCount: '{{count}} of {{limit}} devices',
+    devicesCountNoLimit: '{{count}} devices',
+    devicesEmpty: 'No devices are linked yet.',
+    devicesUnknownDevice: 'Unknown device',
+    devicesAdded: 'Added {{date}}',
+    devicesLastSeen: 'Last seen {{date}}',
+    devicesUnlink: 'Unlink',
+    devicesUnlinkConfirmTitle: 'Unlink this device?',
+    devicesUnlinkConfirmText:
+        '{{name}} will be disconnected and will have to add the subscription again to reconnect.',
+    devicesUnlinkConfirm: 'Yes, unlink',
+    devicesUnlinked: 'Device unlinked',
+    devicesLoadError: 'Could not load devices.',
+
     errorGeneric: 'Something went wrong. Please try again later.',
     errorRemnawave: 'The provider panel did not accept the request. Please try again later.',
     errorNotAllowed: 'This option is not available.',
@@ -110,6 +127,23 @@ const ru: TAccountTranslations = {
     resetBlockedLimit: 'Вы использовали все сбросы в этом месяце.',
     resetBlockedUnlimited: 'У вашей подписки нет лимита трафика, сбрасывать нечего.',
     resetBlockedInactive: 'Сброс трафика доступен только для активной подписки.',
+
+    devicesTitle: 'Устройства',
+    devicesDescription:
+        'Устройства, которые подключались с этой подпиской. Отвяжите те, которыми больше не пользуетесь, чтобы освободить слот.',
+    devicesCount: '{{count}} из {{limit}} устройств',
+    devicesCountNoLimit: 'Устройств: {{count}}',
+    devicesEmpty: 'Пока нет привязанных устройств.',
+    devicesUnknownDevice: 'Неизвестное устройство',
+    devicesAdded: 'Добавлено {{date}}',
+    devicesLastSeen: 'Последняя активность {{date}}',
+    devicesUnlink: 'Отвязать',
+    devicesUnlinkConfirmTitle: 'Отвязать устройство?',
+    devicesUnlinkConfirmText:
+        '{{name}} будет отключено, и для повторного подключения придётся заново добавить подписку.',
+    devicesUnlinkConfirm: 'Да, отвязать',
+    devicesUnlinked: 'Устройство отвязано',
+    devicesLoadError: 'Не удалось загрузить устройства.',
 
     errorGeneric: 'Что-то пошло не так. Попробуйте позже.',
     errorRemnawave: 'Панель провайдера не приняла запрос. Попробуйте позже.',

@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 import {
     GetExternalSquadsCommand,
+    GetUserHwidDevicesCommand,
     GetSubscriptionInfoByShortUuidCommand,
     GetUserByShortUuidCommand,
 } from '@remnawave/backend-contract';
@@ -13,6 +14,7 @@ import { getAccountFeatures, IAccountFeatures } from './account-features';
 import { parseExternalSquadName } from './external-squad-name';
 import { TrafficResetRepository } from './repositories/traffic-reset.repository';
 import {
+    IAccountDevices,
     IAccountSettings,
     IExternalSquadOption,
     TAccountErrorCode,
@@ -21,6 +23,7 @@ import {
 type TRemnawaveUser = GetUserByShortUuidCommand.Response['response'];
 type TSubscriptionInfo = GetSubscriptionInfoByShortUuidCommand.Response['response'];
 type TExternalSquad = GetExternalSquadsCommand.Response['response']['externalSquads'][number];
+type THwidDevice = GetUserHwidDevicesCommand.Response['response']['devices'][number];
 
 export interface IAccountMutationResult {
     settings: IAccountSettings;
@@ -67,6 +70,82 @@ export class AccountService {
         return {
             user: this.buildUserSection(user),
             trafficReset: this.buildTrafficResetSection(user),
+        };
+    }
+
+    public async getDevices(clientIp: string, shortUuid: string): Promise<IAccountDevices> {
+        this.assertFeature(this.features.devices);
+
+        const user = await this.fetchUser(clientIp, shortUuid);
+        const result = await this.axiosService.getUserHwidDevices(clientIp, user.id);
+
+        if (!result.isOk || !result.response) {
+            throw this.error(
+                'REMNAWAVE_ERROR',
+                'Cannot load devices from Remnawave',
+                HttpStatus.BAD_GATEWAY,
+            );
+        }
+
+        return this.buildDevicesSection(user.hwidDeviceLimit, result.response.devices);
+    }
+
+    public async deleteDevice(
+        clientIp: string,
+        shortUuid: string,
+        hwid: string,
+    ): Promise<IAccountDevices> {
+        this.assertFeature(this.features.devices);
+
+        const user = await this.fetchUser(clientIp, shortUuid);
+        const current = await this.axiosService.getUserHwidDevices(clientIp, user.id);
+
+        if (!current.isOk || !current.response) {
+            throw this.error(
+                'REMNAWAVE_ERROR',
+                'Cannot load devices from Remnawave',
+                HttpStatus.BAD_GATEWAY,
+            );
+        }
+
+        // Only devices that belong to this subscription can be unlinked through the page.
+        if (!current.response.devices.some((device) => device.hwid === hwid)) {
+            throw this.error('DEVICE_NOT_FOUND', 'Device not found', HttpStatus.NOT_FOUND);
+        }
+
+        const result = await this.axiosService.deleteUserHwidDevice(clientIp, user.id, hwid);
+
+        if (!result.isOk || !result.response) {
+            throw this.error(
+                'REMNAWAVE_ERROR',
+                'Remnawave rejected the device removal',
+                HttpStatus.BAD_GATEWAY,
+            );
+        }
+
+        this.logger.log(
+            `User ${user.username} (#${user.id}) unlinked device ${hwid.slice(0, 8)}… via subscription page`,
+        );
+
+        return this.buildDevicesSection(user.hwidDeviceLimit, result.response.devices);
+    }
+
+    private buildDevicesSection(limit: number | null, devices: THwidDevice[]): IAccountDevices {
+        return {
+            enabled: true,
+            limit,
+            devices: devices
+                .slice()
+                .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                .map((device) => ({
+                    hwid: device.hwid,
+                    platform: device.platform,
+                    osVersion: device.osVersion,
+                    deviceModel: device.deviceModel,
+                    userAgent: device.userAgent,
+                    createdAt: new Date(device.createdAt).toISOString(),
+                    updatedAt: new Date(device.updatedAt).toISOString(),
+                })),
         };
     }
 

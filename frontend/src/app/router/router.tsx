@@ -1,6 +1,6 @@
+import { ErrorPageComponent } from '@pages/errors/5xx-error/server-error.component'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router'
 
-import { ErrorPageComponent } from '@pages/errors/5xx-error/server-error.component'
 import { ErrorBoundaryHoc } from '@shared/hocs/error-boundary'
 
 import { RootLayout } from '../layouts/root/root.layout'

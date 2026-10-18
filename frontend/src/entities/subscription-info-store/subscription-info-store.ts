@@ -6,7 +6,8 @@ import { IAccountFeatures, IActions, IState } from './interfaces'
 const DISABLED_FEATURES: IAccountFeatures = {
     enabled: false,
     externalSquads: false,
-    trafficReset: false
+    trafficReset: false,
+    devices: false
 }
 
 const initialState: IState = {
@@ -35,9 +36,12 @@ export const useSubscriptionInfoStore = create<IActions & IState>()((set) => ({
                 accountFeatures: {
                     externalSquads: Boolean(features.externalSquads),
                     trafficReset: Boolean(features.trafficReset),
+                    devices: Boolean(features.devices),
                     enabled:
                         Boolean(features.enabled) &&
-                        (Boolean(features.externalSquads) || Boolean(features.trafficReset))
+                        (Boolean(features.externalSquads) ||
+                            Boolean(features.trafficReset) ||
+                            Boolean(features.devices))
                 }
             }))
         },

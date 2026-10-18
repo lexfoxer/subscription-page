@@ -11,7 +11,11 @@ import {
 } from '@mantine/core'
 import { TSubscriptionPagePlatformKey } from '@remnawave/subscription-page-types'
 import { IconAlertTriangle, IconArrowLeft } from '@tabler/icons-react'
-import { ExternalSquadCardWidget, TrafficResetCardWidget } from '@widgets/settings'
+import {
+    DevicesCardConnector,
+    ExternalSquadCardWidget,
+    TrafficResetCardWidget
+} from '@widgets/settings'
 
 import { AccountApiError, IAccountSettings } from '@shared/api/account'
 import { useAccountTranslation } from '@shared/locales/account-settings'
@@ -108,6 +112,8 @@ export const SettingsPageComponent = ({
                         user={settings.user}
                     />
                 )}
+
+                <DevicesCardConnector />
             </>
         )
     }

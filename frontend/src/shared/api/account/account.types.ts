@@ -39,12 +39,29 @@ export interface IAccountSettings {
 
 export type IAccountTrafficReset = Pick<IAccountSettings, 'trafficReset' | 'user'>
 
+export interface IAccountDevice {
+    createdAt: string
+    deviceModel: null | string
+    hwid: string
+    osVersion: null | string
+    platform: null | string
+    updatedAt: string
+    userAgent: null | string
+}
+
+export interface IAccountDevices {
+    devices: IAccountDevice[]
+    enabled: boolean
+    limit: null | number
+}
+
 export interface IAccountMutationResult {
     settings: IAccountSettings
     subscription: GetSubscriptionInfoByShortUuidCommand.Response['response'] | null
 }
 
 export type TAccountErrorCode =
+    | 'DEVICE_NOT_FOUND'
     | 'EXTERNAL_SQUAD_NOT_ALLOWED'
     | 'FEATURE_DISABLED'
     | 'LIMIT_REACHED'

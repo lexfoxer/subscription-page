@@ -7,6 +7,7 @@ import { table } from 'table';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import {
+    DeleteUserHwidDeviceCommand,
     GetExternalSquadsCommand,
     GetMetadataCommand,
     GetSubpageConfigByShortUuidCommand,
@@ -15,6 +16,7 @@ import {
     GetSubpageConfigsCommand,
     GetUserByShortUuidCommand,
     GetUserByUsernameCommand,
+    GetUserHwidDevicesCommand,
     REMNAWAVE_REAL_IP_HEADER,
     ResetUserTrafficCommand,
     TRequestTemplateTypeKeys,
@@ -243,6 +245,56 @@ export class AxiosService implements OnModuleInit {
             };
         } catch (error) {
             return this.handleCommandError('ResetUserTraffic', error);
+        }
+    }
+
+    public async getUserHwidDevices(
+        clientIp: string,
+        userId: number,
+    ): Promise<ICommandResponse<GetUserHwidDevicesCommand.Response['response']>> {
+        try {
+            const response = await this.axiosInstance.request<GetUserHwidDevicesCommand.Response>({
+                method: GetUserHwidDevicesCommand.endpointDetails.REQUEST_METHOD,
+                url: GetUserHwidDevicesCommand.url(String(userId)),
+                headers: {
+                    [REMNAWAVE_REAL_IP_HEADER]: clientIp,
+                },
+            });
+
+            return {
+                isOk: true,
+                response: response.data.response,
+            };
+        } catch (error) {
+            return this.handleCommandError('GetUserHwidDevices', error);
+        }
+    }
+
+    public async deleteUserHwidDevice(
+        clientIp: string,
+        userId: number,
+        hwid: string,
+    ): Promise<ICommandResponse<DeleteUserHwidDeviceCommand.Response['response']>> {
+        try {
+            const body: DeleteUserHwidDeviceCommand.RequestBody = { userId, hwid };
+
+            const response = await this.axiosInstance.request<DeleteUserHwidDeviceCommand.Response>(
+                {
+                    method: DeleteUserHwidDeviceCommand.endpointDetails.REQUEST_METHOD,
+                    url: DeleteUserHwidDeviceCommand.url,
+                    data: body,
+                    headers: {
+                        [REMNAWAVE_REAL_IP_HEADER]: clientIp,
+                    },
+                },
+            );
+
+            return {
+                isOk: true,
+                response: response.data.response,
+            };
+        } catch (error) {
+            return this.handleCommandError('DeleteUserHwidDevice', error);
         }
     }
 

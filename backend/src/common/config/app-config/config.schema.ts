@@ -164,6 +164,8 @@ export const configSchema = z
         EXTERNAL_SQUADS_ALLOW_DEFAULT: booleanString(),
         /** true = drop connections like upstream Remnawave; false = answer with HTTP statuses */
         STEALTH_MODE: booleanString(),
+        /** Let users see and unlink their HWID devices on the settings page */
+        DEVICES_MANAGEMENT_ENABLED: booleanString('true'),
     })
     .superRefine((data, ctx) => {
         if (

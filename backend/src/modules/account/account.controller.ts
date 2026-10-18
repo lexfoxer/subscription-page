@@ -1,5 +1,5 @@
 import type { ISessionUser } from './guards/session.guard';
-import type { TSetExternalSquadBody } from './schemas/account.schemas';
+import type { TDeleteDeviceBody, TSetExternalSquadBody } from './schemas/account.schemas';
 
 import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
 
@@ -9,7 +9,7 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 
 import { AccountService } from './account.service';
 import { SessionGuard } from './guards/session.guard';
-import { SetExternalSquadBodySchema } from './schemas/account.schemas';
+import { DeleteDeviceBodySchema, SetExternalSquadBodySchema } from './schemas/account.schemas';
 
 export const ACCOUNT_API_PREFIX = 'api/account';
 
@@ -40,6 +40,21 @@ export class AccountController {
             session.shortUuid,
             body.externalSquadUuid,
         );
+    }
+
+    @Get('devices')
+    async getDevices(@ClientIp() clientIp: string, @SessionUser() session: ISessionUser) {
+        return this.accountService.getDevices(clientIp, session.shortUuid);
+    }
+
+    @Post('devices/delete')
+    @HttpCode(200)
+    async deleteDevice(
+        @ClientIp() clientIp: string,
+        @SessionUser() session: ISessionUser,
+        @Body(new ZodValidationPipe(DeleteDeviceBodySchema)) body: TDeleteDeviceBody,
+    ) {
+        return this.accountService.deleteDevice(clientIp, session.shortUuid, body.hwid);
     }
 
     @Post('reset-traffic')

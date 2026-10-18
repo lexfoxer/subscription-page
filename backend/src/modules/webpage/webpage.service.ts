@@ -246,6 +246,10 @@ export class WebpageService implements OnApplicationBootstrap {
                 },
             );
 
+            // The HTML references hashed assets; a cached copy after a deploy points at files
+            // that no longer exist and renders a blank page.
+            res.set('Cache-Control', 'no-store');
+
             res.type('html').send(
                 this.indexTemplate({
                     metaTitle: baseSettings.metaTitle,

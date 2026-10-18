@@ -2,6 +2,7 @@ import { FetchError, ofetch } from 'ofetch'
 import { joinURL } from 'ufo'
 
 import {
+    IAccountDevices,
     IAccountMutationResult,
     IAccountSettings,
     IAccountTrafficReset,
@@ -20,6 +21,7 @@ export class AccountApiError extends Error {
 }
 
 const KNOWN_CODES = new Set<TAccountErrorCode>([
+    'DEVICE_NOT_FOUND',
     'EXTERNAL_SQUAD_NOT_ALLOWED',
     'FEATURE_DISABLED',
     'LIMIT_REACHED',
@@ -73,6 +75,27 @@ export function createAccountApi(accountApiPath: string) {
             try {
                 return await client<IAccountTrafficReset>(joinURL('/', 'traffic-reset'), {
                     query: { v: Date.now() }
+                })
+            } catch (error) {
+                throw toAccountApiError(error)
+            }
+        },
+
+        async getDevices(): Promise<IAccountDevices> {
+            try {
+                return await client<IAccountDevices>(joinURL('/', 'devices'), {
+                    query: { v: Date.now() }
+                })
+            } catch (error) {
+                throw toAccountApiError(error)
+            }
+        },
+
+        async deleteDevice(hwid: string): Promise<IAccountDevices> {
+            try {
+                return await client<IAccountDevices>(joinURL('/', 'devices/delete'), {
+                    method: 'POST',
+                    body: { hwid }
                 })
             } catch (error) {
                 throw toAccountApiError(error)

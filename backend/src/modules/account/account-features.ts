@@ -4,6 +4,7 @@ export interface IAccountFeatures {
     enabled: boolean;
     externalSquads: boolean;
     trafficReset: boolean;
+    devices: boolean;
 }
 
 /**
@@ -15,10 +16,12 @@ export function getAccountFeatures(configService: TypedConfigService): IAccountF
     const externalSquads =
         configService.getOrThrow('EXTERNAL_SQUADS_SELECTABLE').mode !== 'disabled';
     const trafficReset = configService.getOrThrow('TRAFFIC_RESET_LIMIT_PER_MONTH') > 0;
+    const devices = configService.getOrThrow('DEVICES_MANAGEMENT_ENABLED');
 
     return {
-        enabled: externalSquads || trafficReset,
+        enabled: externalSquads || trafficReset || devices,
         externalSquads,
         trafficReset,
+        devices,
     };
 }
