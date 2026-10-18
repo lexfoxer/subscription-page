@@ -4,40 +4,40 @@ import * as jwt from 'jsonwebtoken';
 import { Logger } from '@nestjs/common';
 
 import { IJwtPayload } from '@common/constants';
+import { rejectRequest } from '@common/utils/reject-request';
 
 const logger = new Logger('CheckAssetsCookieMiddleware');
 
-export function checkAssetsCookieMiddleware(
-    req: { user: IJwtPayload } & Request,
-    res: Response,
-    next: NextFunction,
-) {
-    const secret = process.env.INTERNAL_JWT_SECRET;
+export function createCheckAssetsCookieMiddleware(stealthMode: boolean) {
+    return function checkAssetsCookieMiddleware(
+        req: { user: IJwtPayload } & Request,
+        res: Response,
+        next: NextFunction,
+    ) {
+        const secret = process.env.INTERNAL_JWT_SECRET;
 
-    if (!secret) {
-        logger.error('INTERNAL_JWT_SECRET is not set');
-        res.socket?.destroy();
+        if (!secret) {
+            logger.error('INTERNAL_JWT_SECRET is not set');
+            rejectRequest(res, stealthMode, 500, 'Server misconfigured');
+            return;
+        }
 
-        return;
-    }
+        if (!req.cookies.session) {
+            logger.debug('No session cookie found');
+            rejectRequest(res, stealthMode, 401, 'Session cookie is required');
+            return;
+        }
 
-    if (!req.cookies.session) {
-        logger.debug('No session cookie found');
-        res.socket?.destroy();
+        try {
+            const jwtPayload = jwt.verify(req.cookies.session, secret);
 
-        return;
-    }
+            req.user = jwtPayload as unknown as IJwtPayload;
+        } catch (error) {
+            logger.debug(error);
+            rejectRequest(res, stealthMode, 401, 'Session is expired or invalid');
+            return;
+        }
 
-    try {
-        const jwtPayload = jwt.verify(req.cookies.session, secret);
-
-        req.user = jwtPayload as unknown as IJwtPayload;
-    } catch (error) {
-        logger.debug(error);
-        res.socket?.destroy();
-
-        return;
-    }
-
-    return next();
+        return next();
+    };
 }

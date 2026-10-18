@@ -4,9 +4,11 @@ import { Get, Controller, Res, Req, Param, Logger } from '@nestjs/common';
 
 import { TRequestTemplateTypeKeys } from '@remnawave/backend-contract';
 
+import { TypedConfigService } from '@common/config/app-config';
 import { ClientIp } from '@common/decorators/get-ip';
 import { ResolvedShortUuid } from '@common/decorators/get-resolved-short-uuid';
 import { IsBrowser } from '@common/decorators/is-browser';
+import { rejectRequest } from '@common/utils/reject-request';
 
 import { WebpageService } from '@modules/webpage/webpage.service';
 
@@ -20,6 +22,7 @@ export class SubscriptionController {
     constructor(
         private readonly subscriptionService: SubscriptionService,
         private readonly webpageService: WebpageService,
+        private readonly configService: TypedConfigService,
     ) {}
 
     @Get([':shortUuid', ':shortUuid/:clientType'])
@@ -43,7 +46,12 @@ export class SubscriptionController {
 
         if (clientType === ACCOUNT_SETTINGS_PATH_SEGMENT) {
             // Settings page only exists in the browser; never serve it as a subscription.
-            response.socket?.destroy();
+            rejectRequest(
+                response,
+                this.configService.getOrThrow('STEALTH_MODE'),
+                404,
+                'Not found',
+            );
             return;
         }
 

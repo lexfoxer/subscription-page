@@ -6,12 +6,20 @@ import { Logger } from '@nestjs/common';
 import { TRequestTemplateTypeKeys } from '@remnawave/backend-contract';
 
 import { AxiosService } from '@common/axios/axios.service';
+import { TypedConfigService } from '@common/config/app-config';
+import { rejectRequest } from '@common/utils/reject-request';
 
 @Injectable()
 export class SubscriptionService {
     private readonly logger = new Logger(SubscriptionService.name);
+    private readonly stealthMode: boolean;
 
-    constructor(private readonly axiosService: AxiosService) {}
+    constructor(
+        private readonly axiosService: AxiosService,
+        private readonly configService: TypedConfigService,
+    ) {
+        this.stealthMode = this.configService.getOrThrow('STEALTH_MODE');
+    }
 
     public async serveSubscriptionPage(
         clientIp: string,
@@ -21,7 +29,7 @@ export class SubscriptionService {
         clientType?: TRequestTemplateTypeKeys,
     ): Promise<void> {
         try {
-            const subscriptionDataResponse = await this.axiosService.getSubscription(
+            const result = await this.axiosService.getSubscription(
                 clientIp,
                 shortUuid,
                 req.headers,
@@ -29,21 +37,31 @@ export class SubscriptionService {
                 clientType,
             );
 
-            if (!subscriptionDataResponse) {
-                res.socket?.destroy();
+            if (result.kind === 'not_found') {
+                rejectRequest(res, this.stealthMode, 404, 'Not found');
                 return;
             }
 
-            if (subscriptionDataResponse.headers) {
-                res.set(subscriptionDataResponse.headers);
+            if (result.kind === 'error') {
+                rejectRequest(
+                    res,
+                    this.stealthMode,
+                    503,
+                    'Subscription is temporarily unavailable',
+                );
+                return;
             }
 
-            res.status(200).send(subscriptionDataResponse.subscription);
+            if (result.headers) {
+                res.set(result.headers);
+            }
+
+            res.status(200).send(result.subscription);
             return;
         } catch (error) {
             this.logger.error('Error in serveSubscriptionPage', error);
 
-            res.socket?.destroy();
+            rejectRequest(res, this.stealthMode, 500, 'Internal error');
             return;
         }
     }

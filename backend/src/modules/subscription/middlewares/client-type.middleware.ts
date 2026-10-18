@@ -4,6 +4,9 @@ import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 
 import { REQUEST_TEMPLATE_TYPE_VALUES } from '@remnawave/backend-contract';
 
+import { TypedConfigService } from '@common/config/app-config';
+import { rejectRequest } from '@common/utils/reject-request';
+
 import { ACCOUNT_SETTINGS_PATH_SEGMENT } from '../subscription.constants';
 
 @Injectable()
@@ -12,6 +15,11 @@ export class ClientTypeMiddleware implements NestMiddleware {
     private readonly allowedClientTypes: ReadonlySet<string> = new Set(
         REQUEST_TEMPLATE_TYPE_VALUES,
     );
+    private readonly stealthMode: boolean;
+
+    constructor(private readonly configService: TypedConfigService) {
+        this.stealthMode = this.configService.getOrThrow('STEALTH_MODE');
+    }
 
     use(req: Request, res: Response, next: NextFunction) {
         const clientType = req.params.clientType;
@@ -25,7 +33,7 @@ export class ClientTypeMiddleware implements NestMiddleware {
         if (clientType && !this.allowedClientTypes.has(clientType)) {
             this.logger.error(`Invalid client type: ${clientType}`);
 
-            res.socket?.destroy();
+            rejectRequest(res, this.stealthMode, 404, 'Unknown client type');
             return;
         }
 

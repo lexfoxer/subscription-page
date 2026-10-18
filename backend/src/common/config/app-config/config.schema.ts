@@ -162,11 +162,8 @@ export const configSchema = z
         TRAFFIC_RESET_LIMIT_PER_MONTH: nonNegativeIntString('0'),
         EXTERNAL_SQUADS_SELECTABLE: selectableExternalSquadsList(),
         EXTERNAL_SQUADS_ALLOW_DEFAULT: booleanString(),
-        UNKNOWN_LINK_RESPONSE: z
-            .string()
-            .default('404')
-            .transform((val) => (val.trim() === '' ? '404' : val.trim().toLowerCase()))
-            .pipe(z.enum(['404', 'drop'])),
+        /** true = drop connections like upstream Remnawave; false = answer with HTTP statuses */
+        STEALTH_MODE: booleanString(),
     })
     .superRefine((data, ctx) => {
         if (

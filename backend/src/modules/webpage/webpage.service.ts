@@ -19,6 +19,7 @@ import { AxiosService } from '@common/axios';
 import { TypedConfigService } from '@common/config/app-config';
 import { getAssetsPath, isDevelopment } from '@common/utils';
 import { decryptUuid, encryptUuid } from '@common/utils/crypt-utils';
+import { rejectRequest } from '@common/utils/reject-request';
 
 import { getAccountFeatures, IAccountFeatures } from '@modules/account/account-features';
 
@@ -29,7 +30,7 @@ export class WebpageService implements OnApplicationBootstrap {
     private readonly subpageConfigUuid: string;
     private readonly subpageConfigMap: Map<string, TSubscriptionPageRawConfig> = new Map();
     private readonly accountFeatures: IAccountFeatures;
-    private readonly unknownLinkResponse: '404' | 'drop';
+    private readonly stealthMode: boolean;
     private indexTemplate: ejs.TemplateFunction;
 
     constructor(
@@ -40,7 +41,7 @@ export class WebpageService implements OnApplicationBootstrap {
         this.internalJwtSecret = this.configService.getOrThrow('INTERNAL_JWT_SECRET');
         this.subpageConfigUuid = this.configService.getOrThrow('SUBPAGE_CONFIG_UUID');
         this.accountFeatures = getAccountFeatures(this.configService);
-        this.unknownLinkResponse = this.configService.getOrThrow('UNKNOWN_LINK_RESPONSE');
+        this.stealthMode = this.configService.getOrThrow('STEALTH_MODE');
     }
 
     public async onApplicationBootstrap(): Promise<void> {
@@ -185,20 +186,6 @@ export class WebpageService implements OnApplicationBootstrap {
         );
     }
 
-    /**
-     * Unknown shortUuid. Upstream silently drops the connection (UNKNOWN_LINK_RESPONSE=drop),
-     * which browsers show as "connection reset" and some proxies count as a backend failure.
-     * The default answers a plain 404 instead.
-     */
-    private rejectUnknownLink(res: Response): void {
-        if (this.unknownLinkResponse === 'drop') {
-            res.socket?.destroy();
-            return;
-        }
-
-        res.status(404).set('Cache-Control', 'no-store').type('text/plain').send('Not found');
-    }
-
     public async serveWebpage(
         clientIp: string,
         req: Request,
@@ -213,11 +200,11 @@ export class WebpageService implements OnApplicationBootstrap {
 
             if (!subscriptionDataResponse.isOk || !subscriptionDataResponse.response) {
                 if (subscriptionDataResponse.code === '404') {
-                    this.rejectUnknownLink(res);
+                    rejectRequest(res, this.stealthMode, 404, 'Not found');
                     return;
                 }
 
-                res.socket?.destroy();
+                rejectRequest(res, this.stealthMode, 503, 'Panel is temporarily unavailable');
                 return;
             }
 
@@ -227,7 +214,7 @@ export class WebpageService implements OnApplicationBootstrap {
             );
 
             if (!subpageConfigResponse.isOk || !subpageConfigResponse.response) {
-                res.socket?.destroy();
+                rejectRequest(res, this.stealthMode, 503, 'Panel is temporarily unavailable');
                 return;
             }
 
@@ -235,7 +222,7 @@ export class WebpageService implements OnApplicationBootstrap {
 
             if (subpageConfig.webpageAllowed === false) {
                 this.logger.log(`Webpage access is not allowed by Remnawave's SRR.`);
-                res.socket?.destroy();
+                rejectRequest(res, this.stealthMode, 403, 'Forbidden');
                 return;
             }
 
@@ -272,7 +259,7 @@ export class WebpageService implements OnApplicationBootstrap {
         } catch (error) {
             this.logger.error(`Error in returnWebpage: ${error}`);
 
-            res.socket?.destroy();
+            rejectRequest(res, this.stealthMode, 500, 'Internal error');
             return;
         }
     }

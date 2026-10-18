@@ -402,10 +402,11 @@ export class AxiosService implements OnModuleInit {
         headers: NodeJS.Dict<string | string[]>,
         withClientType: boolean = false,
         clientType?: TRequestTemplateTypeKeys,
-    ): Promise<{
-        subscription: Buffer;
-        headers: RawAxiosResponseHeaders;
-    } | null> {
+    ): Promise<
+        | { kind: 'ok'; subscription: Buffer; headers: RawAxiosResponseHeaders }
+        | { kind: 'not_found' }
+        | { kind: 'error' }
+    > {
         try {
             let basePath = 'api/sub/' + encodeURIComponent(shortUuid);
 
@@ -429,6 +430,7 @@ export class AxiosService implements OnModuleInit {
             });
 
             return {
+                kind: 'ok',
                 subscription: response.data,
                 headers: Object.fromEntries(
                     Object.entries(response.headers).filter(([key]) => !IGNORED_HEADERS.has(key)),
@@ -436,10 +438,8 @@ export class AxiosService implements OnModuleInit {
             };
         } catch (error) {
             if (error instanceof AxiosError) {
-                if (error.response) {
-                    if (error.response.status === 404) {
-                        return null;
-                    }
+                if (error.response?.status === 404) {
+                    return { kind: 'not_found' };
                 }
 
                 this.logger.error(`Error in GetSubscription Request: ${error.message}`);
@@ -447,7 +447,7 @@ export class AxiosService implements OnModuleInit {
                 this.logger.error(`Error in GetSubscription Request: ${error}`);
             }
 
-            return null;
+            return { kind: 'error' };
         }
     }
 }

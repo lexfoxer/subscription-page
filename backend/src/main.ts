@@ -18,11 +18,11 @@ import { APP_CONFIG_ROUTE_WO_LEADING_PATH } from '@remnawave/subscription-page-t
 import { TypedConfigService } from '@common/config/app-config';
 import { NotFoundExceptionFilter } from '@common/exception/not-found-exception.filter';
 import {
-    headerFilterMiddleware,
-    noRobotsMiddleware,
-    proxyCheckMiddleware,
-    checkAssetsCookieMiddleware,
+    createCheckAssetsCookieMiddleware,
+    createHeaderFilterMiddleware,
+    createProxyCheckMiddleware,
     getRealIp,
+    noRobotsMiddleware,
 } from '@common/middlewares';
 import { customLogFilter } from '@common/utils/filter-logs/filter-logs';
 import { getAssetsPath, isDevelopment, isDevOrDebugLogsEnabled } from '@common/utils/startup-app';
@@ -76,6 +76,8 @@ async function bootstrap(): Promise<void> {
 
     app.set('trust proxy', config.getOrThrow('TRUST_PROXY'));
 
+    const stealthMode = config.getOrThrow('STEALTH_MODE');
+
     app.use('/internal/health', (req: Request, res: Response, next: NextFunction) => {
         const ip = req.socket.remoteAddress ?? '';
         const isLoopback = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
@@ -89,18 +91,18 @@ async function bootstrap(): Promise<void> {
     });
 
     if (!isDevelopment()) {
-        app.use(proxyCheckMiddleware);
+        app.use(createProxyCheckMiddleware(stealthMode));
     }
 
     // Session cookie is needed by /assets (static protection) and the account API (SessionGuard).
     app.use(cookieParser());
-    app.use('/assets', checkAssetsCookieMiddleware);
+    app.use('/assets', createCheckAssetsCookieMiddleware(stealthMode));
 
     // Must run before headerFilterMiddleware: it strips `content-length`, after which the
     // body parser Nest registers later would treat every request as body-less.
     app.use(json({ limit: '16kb' }));
 
-    app.use(noRobotsMiddleware, getRealIp, headerFilterMiddleware);
+    app.use(noRobotsMiddleware, getRealIp, createHeaderFilterMiddleware(stealthMode));
 
     app.use(
         '/assets',
@@ -133,7 +135,11 @@ async function bootstrap(): Promise<void> {
         logger.info('[CONFIG] CUSTOM_SUB_PREFIX: not set');
     }
 
-    app.useGlobalFilters(new NotFoundExceptionFilter());
+    app.useGlobalFilters(new NotFoundExceptionFilter(stealthMode));
+
+    logger.info(
+        `[CONFIG] STEALTH_MODE: ${stealthMode ? 'on (drop connections like upstream)' : 'off (answer with HTTP statuses)'}`,
+    );
 
     app.enableCors({
         origin: '*',
