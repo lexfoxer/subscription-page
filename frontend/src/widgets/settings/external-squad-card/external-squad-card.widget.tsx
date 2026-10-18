@@ -13,6 +13,17 @@ import classes from '../settings-card.module.css'
 
 const DEFAULT_OPTION_VALUE = '__default__'
 
+const PLATFORM_GROUP_ORDER: ('all' | TSubscriptionPagePlatformKey)[] = [
+    'all',
+    'windows',
+    'macos',
+    'linux',
+    'ios',
+    'android',
+    'androidTV',
+    'appleTV'
+]
+
 interface IProps {
     externalSquads: IAccountSettings['externalSquads']
     onSave: (externalSquadUuid: null | string) => Promise<void>
@@ -96,6 +107,16 @@ export const ExternalSquadCardWidget = ({ externalSquads, platform, onSave }: IP
 
     const isDirty = selectedValue !== currentValue
 
+    // Options grouped by platform: universal first, then desktop, then mobile / TV.
+    // A multi-platform option is listed in every group it belongs to.
+    const groups = PLATFORM_GROUP_ORDER.map((groupKey) => ({
+        key: groupKey,
+        label: groupKey === 'all' ? ta('squadAnyPlatform') : platformName(groupKey),
+        options: externalSquads.options.filter((option) =>
+            groupKey === 'all' ? option.platforms.length === 0 : option.platforms.includes(groupKey)
+        )
+    })).filter((group) => group.options.length > 0)
+
     const handleSave = async () => {
         vibrate('tap')
         setIsSaving(true)
@@ -176,16 +197,38 @@ export const ExternalSquadCardWidget = ({ externalSquads, platform, onSave }: IP
                             />
                         )}
 
-                        {externalSquads.options.map((option) => (
-                            <OptionRow
-                                disabled={isSaving}
-                                key={option.uuid}
-                                name={option.name}
-                                onSelect={() => select(option.uuid)}
-                                platforms={option.platforms}
-                                recommended={isRecommended(option)}
-                                selected={selectedValue === option.uuid}
-                            />
+                        {groups.map((group) => (
+                            <Stack gap={6} key={group.key} mt={4}>
+                                <Group gap={6} wrap="nowrap">
+                                    <Text
+                                        c={group.key === platform ? 'cyan' : 'dimmed'}
+                                        fw={600}
+                                        size="xs"
+                                        tt="uppercase"
+                                    >
+                                        {group.label}
+                                    </Text>
+                                    <Badge color="gray" size="xs" variant="light">
+                                        {group.options.length}
+                                    </Badge>
+                                </Group>
+
+                                {group.options.map((option) => (
+                                    <OptionRow
+                                        disabled={isSaving}
+                                        key={`${group.key}-${option.uuid}`}
+                                        name={option.name}
+                                        onSelect={() => select(option.uuid)}
+                                        platforms={
+                                            option.platforms.length > 1
+                                                ? option.platforms
+                                                : undefined
+                                        }
+                                        recommended={isRecommended(option)}
+                                        selected={selectedValue === option.uuid}
+                                    />
+                                ))}
+                            </Stack>
                         ))}
                     </Stack>
                 )}
