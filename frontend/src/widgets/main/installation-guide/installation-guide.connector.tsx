@@ -1,4 +1,9 @@
 import {
+    TSubscriptionPageAppConfig,
+    TSubscriptionPageButtonConfig,
+    TSubscriptionPagePlatformKey
+} from '@remnawave/subscription-page-types'
+import {
     Box,
     Button,
     ButtonVariant,
@@ -9,24 +14,18 @@ import {
     Title,
     UnstyledButton
 } from '@mantine/core'
-import { useClipboard } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import {
-    TSubscriptionPageAppConfig,
-    TSubscriptionPageButtonConfig,
-    TSubscriptionPagePlatformKey
-} from '@remnawave/subscription-page-types'
-import clsx from 'clsx'
+import { useClipboard } from '@mantine/hooks'
 import { useState } from 'react'
+import clsx from 'clsx'
 
-import { useTranslation } from '@shared/hooks'
-import { getIconFromLibrary } from '@shared/utils/config-parser'
 import { constructSubscriptionUrl } from '@shared/utils/construct-subscription-url'
-import { TemplateEngine } from '@shared/utils/template-engine'
-import { vibrate } from '@shared/utils/vibrate'
-
-import { useAppConfig } from '@entities/app-config-store'
 import { useSubscription } from '@entities/subscription-info-store'
+import { getIconFromLibrary } from '@shared/utils/config-parser'
+import { TemplateEngine } from '@shared/utils/template-engine'
+import { useAppConfig } from '@entities/app-config-store'
+import { vibrate } from '@shared/utils/vibrate'
+import { useTranslation } from '@shared/hooks'
 
 import { IBlockRendererProps } from './components/blocks/renderer-block.interface'
 import classes from './installation-guide.module.css'

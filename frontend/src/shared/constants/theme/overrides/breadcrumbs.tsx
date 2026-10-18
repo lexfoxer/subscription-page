@@ -1,5 +1,5 @@
-import { Breadcrumbs } from '@mantine/core'
 import { GoDotFill as BreadcrumbsSeparator } from 'react-icons/go'
+import { Breadcrumbs } from '@mantine/core'
 
 export default {
     Breadcrumbs: Breadcrumbs.extend({

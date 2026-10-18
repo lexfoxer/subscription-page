@@ -1,11 +1,10 @@
 import { useMediaQuery, useOs } from '@mantine/hooks'
 import { useEffect, useState } from 'react'
 
-import { LoadingScreen } from '@shared/ui'
-import { osToPlatform } from '@shared/utils/platform'
-
-import { useAppConfig, useIsConfigLoaded } from '@entities/app-config-store'
 import { useSubscriptionInfoStoreInfo } from '@entities/subscription-info-store'
+import { useAppConfig, useIsConfigLoaded } from '@entities/app-config-store'
+import { osToPlatform } from '@shared/utils/platform'
+import { LoadingScreen } from '@shared/ui'
 
 import { MainPageComponent } from '../components/main.page.component'
 

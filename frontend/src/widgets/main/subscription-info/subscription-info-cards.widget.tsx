@@ -1,10 +1,9 @@
-import { Box, Group, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconArrowsUpDown, IconCalendar, IconCheck, IconUserScan, IconX } from '@tabler/icons-react'
-
-import { useTranslation } from '@shared/hooks'
-import { formatDate } from '@shared/utils/config-parser'
+import { Box, Group, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
 
 import { useSubscription } from '@entities/subscription-info-store'
+import { formatDate } from '@shared/utils/config-parser'
+import { useTranslation } from '@shared/hooks'
 
 import classes from './subscription-info-cards.module.css'
 

@@ -1,5 +1,6 @@
 import { Box, Center, Container, Group, Image, Stack, Title } from '@mantine/core'
 import { TSubscriptionPagePlatformKey } from '@remnawave/subscription-page-types'
+
 import {
     AccordionBlockRenderer,
     CardsBlockRenderer,
@@ -13,12 +14,10 @@ import {
     TimelineBlockRenderer,
     TrafficResetConnector
 } from '@widgets/main'
-import { SettingsButton } from '@widgets/settings'
-
-import { Page, RemnawaveLogo } from '@shared/ui'
-import { LanguagePicker } from '@shared/ui/language-picker/language-picker.shared'
-
 import { useAppConfig, useAppConfigStoreActions, useCurrentLang } from '@entities/app-config-store'
+import { LanguagePicker } from '@shared/ui/language-picker/language-picker.shared'
+import { SettingsButton } from '@widgets/settings'
+import { Page, RemnawaveLogo } from '@shared/ui'
 
 interface IMainPageComponentProps {
     isMobile: boolean

@@ -11,14 +11,13 @@ import {
     Text,
     Title
 } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { IconCheck, IconCopy, IconKey, IconQrcode } from '@tabler/icons-react'
+import { modals } from '@mantine/modals'
 import { renderSVG } from 'uqr'
 
-import { useTranslation } from '@shared/hooks'
-import { vibrate } from '@shared/utils/vibrate'
-
 import { useSubscription } from '@entities/subscription-info-store'
+import { vibrate } from '@shared/utils/vibrate'
+import { useTranslation } from '@shared/hooks'
 
 import classes from './raw-keys.module.css'
 

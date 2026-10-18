@@ -1,4 +1,3 @@
-import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import {
     IconAlertCircle,
     IconArrowsUpDown,
@@ -7,16 +6,16 @@ import {
     IconUserScan,
     IconX
 } from '@tabler/icons-react'
+import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 
-import { useTranslation } from '@shared/hooks'
-import { InfoBlockShared } from '@shared/ui/info-block/info-block.shared'
 import {
     formatDate,
     getColorGradientSolid,
     getExpirationTextUtil
 } from '@shared/utils/config-parser'
-
+import { InfoBlockShared } from '@shared/ui/info-block/info-block.shared'
 import { useSubscription } from '@entities/subscription-info-store'
+import { useTranslation } from '@shared/hooks'
 
 interface IProps {
     isMobile: boolean
